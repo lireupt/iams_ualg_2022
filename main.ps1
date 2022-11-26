@@ -18,7 +18,10 @@ $UserOu="OU=Exercicios,OU=User Accounts,DC=cs,DC=local"
 ##Caminho file CSV
 $ListaNovosUsers=Import-CSV "C:\CIBERSEGURANCA\Company_GroupSeven.csv"
 
+
+
 ForEach ($User in $ListaNovosUsers) {
+
 
 ##Variaveis + Atributos
 $SID=$User.ID  ##ok
@@ -60,6 +63,17 @@ $userPassword=$User.Password
 $AccountExpirationDate=$User.end_contract_date ##OK
 
 ##$expire=$null ##ok
+
+
+#Exemplo funcional de um registo: OK
+#New-ADOrganizationalUnit -Name "ola2" -Path "OU=Exercicios,OU=User Accounts,DC=cs,DC=local"
+
+#Account will be created in the OU provided by the $OU variable read from the CSV file
+New-ADOrganizationalUnit ` ##Criar Organizações na AD
+-Name $Department `
+-path $UserOu `
+
+
 
 New-ADUser -Name $sn -SamAccountName $sAMAccountName  `
             -AccountPassword (ConvertTo-SecureString -AsPlainText 'Pa$$w0rd' -Force) `
