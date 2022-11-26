@@ -14,7 +14,7 @@ Import-Module ActiveDirectory
 $Domain="@cs.local"
 
 ##Caminho OU
-$UserOu="Exercicios,OU=User Accounts,DC=cs,DC=local"
+$UserOu="OU=Exercicios,OU=User Accounts,DC=cs,DC=local"
 ##Caminho file CSV
 $ListaNovosUsers=Import-CSV "C:\CIBERSEGURANCA\Company_GroupSeven.csv"
 
