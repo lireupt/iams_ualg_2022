@@ -112,7 +112,8 @@ New-ADUser -Name $sn -SamAccountName $sAMAccountName  `
 
  ### Para Rever 
  #Create administrative groups
- 
+## Font: http://woshub.com/create-organizational-unit-structure-ad-powershell/
+
  
 $adm_grp=New-ADGroup ($City+ "_admins") -path ("OU=Admins,OU="+$CityFull+","+$ParentOU) -GroupScope Global -PassThru –Verbose
 $adm_wks=New-ADGroup ($City+ "_account_managers") -path ("OU=Admins,OU="+$CityFull+","+$ParentOU) -GroupScope Global -PassThru –Verbose
