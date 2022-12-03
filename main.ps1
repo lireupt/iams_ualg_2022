@@ -124,6 +124,10 @@ $SyncFieldMap=@{
 
 #Global Variables
 $csvFilePath = "C:\CIBERSEGURANCA\Company_GroupSeven1.csv"
+
+##caminho casa
+#$csvFilePath = "D:\Projects\iams_ualg_2022\Company_GroupSeven1.csv"
+
 $csvDelimiter = ","
 $Domain = "cs.local"
 #$Domain = "cs.local/User Accounts/Exercicios/test_group7"
