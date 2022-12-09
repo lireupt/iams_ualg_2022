@@ -297,42 +297,74 @@ function Get-CheckUserName {
 #Get-CheckUserName -GivenName "Ernest" -SurName "Staller" -CurrentuserName "ErnestS" -Domain $Domain -UserOu $UserOu
 
 ## 6.2 - Change fields in AD
-# function Sync-ExistingUsers {
-#     [CmdletBinding()]
-#     Param (
-#         # Parameter help description
-#         [Parameter(Mandatory)]
-#         [hashtable]$UserSyncData       
-#     )
-#     $SyncedUsers= $UserSyncData.SyncUser
-#     foreach($SyncedUser in $SyncedUsers){
-#         #Write-Verbose "Loading data for $($SyncedUser.GivenName)"
-#         $ADUsers = Get-ADUser -Filter "$($UserSyncData.UniqueID) -eq $($SyncedUser.$($UserSyncData.UniqueID))" -Server $UserSyncData.Domain -SearchBase $UserSyncData.UserOu -Properties *
-#         if(-not($OU = Get-ADOrganizationalUnit -Filter "name -eq '$($SyncedUser.$($UserSyncData.OUProperty))'" -Server $UserSyncData.Domain -SearchBase $UserSyncData.UserOu)){
-#             throw "The organization unit: $($NewUSer.$($SyncedUser.$($UserSyncData.OUProperty)))"
-#         }  
-#         #Write-Verbose "The user currently in  $($ADUser.DistinguishedName) but shoul be $OU"
-#         # #Change OU
-#         Write-Verbose "The name $($ADUser.DistinguishedName)"
-#         if(($ADUsers.DistinguishedName.Split(",")[1..$($ADUser.DistinguishedName.Length)] -join ",") -ne ($OU.DistinguishedName)){
-#             #Write-Verbose "The name need to be changed"
-#             Get-ADUser -Identity $ADUsers | Move-ADObject -TargetPath  $OU.DistinguishedName
-#            # Move-ADObject -Identity $ADUser -TargetPath $OU.DistinguishedName -Server $UserSyncData.Domain -PassThru $UserOu
-#         }
-#         # $ADUser = Get-ADUser -Filter "$($UserSyncData.UniqueID) -eq $($SyncedUser.$($UserSyncData.UniqueID))" -Server $UserSyncData.Domain -SearchBase $UserSyncData.UserOu -Properties *
-#         # $UserName = Get-CheckUserName -GivenName $SyncedUser.GivenName -SurName $SyncedUser.SurName -CurrentuserName $ADUser.SamAccountName -Domain $UserSyncData.Domain -UserOu $UserSyncData.UserOu     
-#         # if($ADUser.SamAccountName -notlike $UserName){
-#         #     Write-Verbose "Username nedds to be changed"
-#         #     Set-ADUser -Identity $ADUser -Replace @{UserPrincipalName="$UserName@$($UserSyncData.Domain)"} -Server $UserSyncData.Domain
-#         #     Set-ADUser -Identity $ADUser -Replace @{SamAccountName="$UserName"} -Server $UserSyncData.Domain
-#         #     Rename-ADObject -Identity $ADUser -NewName $UserName -Server $UserSyncData.Domain
-#         # }
-#     }   
-# }
+function Sync-ExistingUsers {
+    [CmdletBinding()]
+    Param (
+        # Parameter help description
+        [Parameter(Mandatory)]
+        [hashtable]$UserSyncData       
+    )
+    $SyncedUsers= $UserSyncData.SyncUser
+    foreach($SyncedUser in $SyncedUsers){
+        #Write-Verbose "Loading data for $($SyncedUser.GivenName)"
+        $ADUsers = Get-ADUser -Filter "$($UserSyncData.UniqueID) -eq $($SyncedUser.$($UserSyncData.UniqueID))" -Server $UserSyncData.Domain -SearchBase $UserSyncData.UserOu -Properties *
+        if(-not($OU = Get-ADOrganizationalUnit -Filter "name -eq '$($SyncedUser.$($UserSyncData.OUProperty))'" -Server $UserSyncData.Domain -SearchBase $UserSyncData.UserOu)){
+            throw "The organization unit: $($NewUSer.$($SyncedUser.$($UserSyncData.OUProperty)))"
+        }  
+        #Write-Verbose "The user currently in  $($ADUser.DistinguishedName) but shoul be $OU"
+        # #Change OU
+        Write-Verbose "The name $($ADUser.DistinguishedName)"
+        if(($ADUsers.DistinguishedName.Split(",")[1..$($ADUser.DistinguishedName.Length)] -join ",") -ne ($OU.DistinguishedName)){
+            #Write-Verbose "The name need to be changed"
+            Get-ADUser -Identity $ADUsers | Move-ADObject -TargetPath  $OU.DistinguishedName
+           # Move-ADObject -Identity $ADUser -TargetPath $OU.DistinguishedName -Server $UserSyncData.Domain -PassThru $UserOu
+        }
+        # $ADUser = Get-ADUser -Filter "$($UserSyncData.UniqueID) -eq $($SyncedUser.$($UserSyncData.UniqueID))" -Server $UserSyncData.Domain -SearchBase $UserSyncData.UserOu -Properties *
+        # $UserName = Get-CheckUserName -GivenName $SyncedUser.GivenName -SurName $SyncedUser.SurName -CurrentuserName $ADUser.SamAccountName -Domain $UserSyncData.Domain -UserOu $UserSyncData.UserOu     
+        # if($ADUser.SamAccountName -notlike $UserName){
+        #     Write-Verbose "Username nedds to be changed"
+        #     Set-ADUser -Identity $ADUser -Replace @{UserPrincipalName="$UserName@$($UserSyncData.Domain)"} -Server $UserSyncData.Domain
+        #     Set-ADUser -Identity $ADUser -Replace @{SamAccountName="$UserName"} -Server $UserSyncData.Domain
+        #     Rename-ADObject -Identity $ADUser -NewName $UserName -Server $UserSyncData.Domain
+        # }
+    }   
+}
 
-## 6.3 - Remove
+## 6.3 - Disable / Remove User Accounts
+function Remove-ADUsers {
+    [CmdletBinding()]
+    Param (
+        # Parameter help description
+        [Parameter(Mandatory)]
+        [hashtable]$UserSyncData,
+        [Parameter(Mandatory)]
+        [int]$keepDisableFordays=7
+         
+    )
+    try {
 
+        $RemovedUsers = $UserSyncData.RemovedUser
 
+        foreach($RemovedUser in $RemovedUsers){
+            Write-Verbose "fecting data for $($RemovedUser.Name)"
+            $ADUser = Get-ADUser  $RemovedUser.DistinguishedName  -Server $UserSyncData.Domain 
+            if($ADUser.Enabled -eq $true){
+                Write-Verbose "Disabling user $($ADUser.Name)"
+                Set-ADUser -Identity $ADUser.DistinguishedName -Enabled $false -AccountExpirationDate(Get-Date).AddDays($keepDisableFordays) -Server $UserSyncData.Domain -Confirm:$false
+            }else{
+                if($ADUse.AccountExpirationDate -lt (Get-Date)){
+                    Write-Verbose "Deleting account $($ADUser.Name)"
+                    Remove-ADUser -Identity $ADUser.DistinguishedName -Server $UserSyncData.Domain -Confirm:$false
+                }else {
+                    Write-Verbose "Account $($ADuser.Name) is still within retention period"
+                }
+            }   
+        }
+    }
+    catch {
+        Write-Error -Message $_.Exception.Message
+    }
+}
 
 
 #Test Error name
@@ -366,6 +398,7 @@ $UniqueId       = "EmployeeID"
 #OU property to create or not inside AD 
 $OUProperty     = "Department"
 #____________________________________________________________#
+$keepDisableFordays = 7
 
 #SCRIPTS
 # Get-UserFromCsv -FilePath $csvFilePath  -Delimiter $csvDelimiter  -SyncFieldMap $SyncFieldMap
@@ -382,14 +415,5 @@ Get-CreateNewUser -UserSyncData $UserSyncData -Verbose
 
 # Sync-ExistingUsers -UserSyncData $UserSyncData -Verbose
 
+Remove-ADUsers -UserSyncData $UserSyncData -keepDisableFordays $keepDisableFordays -Verbose
 
-
-$RemovedUsers = $UserSyncData.RemovedUser
-#$GetAdUsers = Get-Aduser -Filter "$UniqueId -like '*'" -Server $Domain -Properties @($SyncFieldMap.Values) -SearchBase $UserOu
-
-foreach($RemovedUser in $RemovedUsers){
-    $RemoverUsertest = $RemovedUser.GivenName
-
-    $ADUserR = Get-Aduser $RemoverUsertest  -Server $Domain -Properties@($SyncFieldMap.Values) -SearchBase $UserOu
-    
-}
