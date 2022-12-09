@@ -1,9 +1,9 @@
 #Identity and Access Management Systems UALG Project 2022
 #Team work group 7 
 #develop by:
-#Fábio 
-#Helder
-#Luciano 
+#a78826 - Fábio Duarte 
+#a78830 - Helder Oliveira
+#a78279 - Luciano Neves
 
 Import-Module ActiveDirectory
 set-psdebug -off
